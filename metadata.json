@@ -1,0 +1,5 @@
+{
+  "name": "CantoLingo Interpret",
+  "description": "An efficient web application to interpret and translate Cantonese text from screenshots into English using Gemini 3 Flash.",
+  "requestFramePermissions": []
+}
