@@ -1,59 +1,39 @@
 import React, { useRef, useState } from 'react';
 import { UploadedFile } from '../types';
-import { processFile } from '../utils/imageUtils';
+import { processFiles } from '../utils/imageUtils';
 
 interface ImageUploadProps {
-  onImageSelected: (file: UploadedFile) => void;
+  onImagesSelected: (files: UploadedFile[]) => void;
   isAnalyzing: boolean;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isAnalyzing }) => {
-  const [isDragging, setIsDragging] = useState(false);
+const ImageUpload: React.FC<ImageUploadProps> = ({ onImagesSelected, isAnalyzing }) => {
+  const [isHovered, setIsHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setIsHovered(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsHovered(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsHovered(false);
     if (isAnalyzing) return;
-
-    const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      handleFile(files[0]);
-    }
+    const files = Array.from(e.dataTransfer.files) as File[];
+    handleFiles(files);
   };
 
-  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFile(e.target.files[0]);
-    }
-  };
-
-  const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert("Please upload an image file.");
-      return;
-    }
-    try {
-      const processed = await processFile(file);
-      onImageSelected(processed);
-    } catch (err) {
-      console.error("Error processing file", err);
-    }
-  };
-
-  const triggerSelect = () => {
-    if (!isAnalyzing && fileInputRef.current) {
-      fileInputRef.current.click();
+  const handleFiles = async (files: File[]) => {
+    const validFiles = files.filter(f => f.type.startsWith('image/'));
+    if (validFiles.length > 0) {
+      const processed = await processFiles(validFiles);
+      onImagesSelected(processed);
     }
   };
 
@@ -62,40 +42,48 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageSelected, isAnalyzing 
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={triggerSelect}
+      onClick={() => !isAnalyzing && fileInputRef.current?.click()}
       className={`
-        relative group cursor-pointer 
-        border-2 border-dashed rounded-2xl p-10 
-        flex flex-col items-center justify-center text-center 
-        transition-all duration-300 ease-in-out
-        ${isAnalyzing ? 'opacity-50 cursor-not-allowed' : ''}
-        ${isDragging 
-          ? 'border-indigo-500 bg-indigo-50 scale-[1.01]' 
-          : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50 bg-white shadow-sm'
-        }
+        w-full h-[320px] rounded-xl transition-all duration-300 cursor-pointer
+        flex flex-col items-center justify-center gap-4 border-2
+        ${isHovered 
+          ? 'bg-blue-50 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+          : 'bg-gradient-to-b from-white to-gray-50 border-gray-300 hover:border-blue-300'}
       `}
     >
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileInput}
+        onChange={(e) => e.target.files && handleFiles(Array.from(e.target.files))}
         className="hidden"
         accept="image/*"
+        multiple
         disabled={isAnalyzing}
       />
-      
-      <div className={`p-4 rounded-full bg-indigo-100 mb-4 transition-transform group-hover:scale-110 ${isDragging ? 'scale-110' : ''}`}>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+      {/* Glossy Icon Representation */}
+      <div className={`
+        w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center
+        shadow-[0_4px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.4)] border border-blue-700
+        transition-transform duration-300 ${isHovered ? 'scale-110' : ''}
+      `}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
 
-      <h3 className="text-lg font-semibold text-slate-800 mb-1">
-        Upload Screenshot
-      </h3>
-      <p className="text-sm text-slate-500 max-w-xs mx-auto">
-        Drag and drop your Cantonese screenshot here, or click to browse.
-      </p>
+      <div className="text-center space-y-2">
+         <h3 className="text-lg font-bold text-gray-700">
+           Select or Drop Images
+         </h3>
+         <p className="text-gray-500 text-xs">
+           Supports .PNG, .JPG, .WEBP
+         </p>
+         
+         <div className="btn-aqua px-6 py-2 text-sm font-bold inline-block mt-2">
+            Browse Computer...
+         </div>
+      </div>
     </div>
   );
 };

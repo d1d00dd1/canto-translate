@@ -18,3 +18,7 @@ export const processFile = (file: File): Promise<UploadedFile> => {
     reader.readAsDataURL(file);
   });
 };
+
+export const processFiles = (files: File[]): Promise<UploadedFile[]> => {
+  return Promise.all(files.map(processFile));
+};

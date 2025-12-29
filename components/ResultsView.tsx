@@ -1,70 +1,82 @@
 import React from 'react';
-import { InterpretationResult } from '../types';
+import { InterpretationResult, UploadedFile } from '../types';
 
 interface ResultsViewProps {
-  result: InterpretationResult;
+  results: InterpretationResult[];
+  images: UploadedFile[];
   onReset: () => void;
 }
 
-const ResultsView: React.FC<ResultsViewProps> = ({ result, onReset }) => {
+const ResultsView: React.FC<ResultsViewProps> = ({ results, images, onReset }) => {
   return (
-    <div className="w-full animate-fade-in-up">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-50 to-white px-6 py-4 border-b border-indigo-100 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            Interpretation Complete
-          </h2>
-          <button 
-            onClick={onReset}
-            className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors"
-          >
-            Start Over
-          </button>
-        </div>
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-4">
+         <h2 className="text-lg font-bold text-gray-700">Analysis Report</h2>
+         <button 
+           onClick={onReset}
+           className="btn-aqua secondary px-3 py-1 text-xs"
+         >
+           Clear Data
+         </button>
+      </div>
 
-        {/* Content */}
-        <div className="p-6 grid gap-8 md:grid-cols-2">
-          
-          {/* Cantonese Column */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Original Cantonese
-            </h3>
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-lg md:text-xl text-slate-800 font-medium leading-relaxed whitespace-pre-wrap">
-              {result.cantonese}
+      {/* Data Grid Header */}
+      <div className="grid grid-cols-12 gap-0 text-xs font-bold text-gray-600 bg-gradient-to-b from-gray-100 to-gray-200 border border-gray-400 rounded-t-lg">
+         <div className="col-span-3 p-2 border-r border-gray-300">Source Asset</div>
+         <div className="col-span-9 p-2">Interpretation Data</div>
+      </div>
+
+      {/* Data Rows */}
+      <div className="border-l border-r border-b border-gray-400 bg-white">
+        {results.map((result, index) => {
+          const image = images[index];
+          const isEven = index % 2 === 0;
+          return (
+            <div key={index} className={`grid grid-cols-12 gap-0 ${isEven ? 'bg-white' : 'bg-blue-50/30'}`}>
+               
+               {/* Source Image Cell */}
+               <div className="col-span-3 p-2 border-r border-gray-300 flex flex-col items-center justify-center border-b border-gray-200">
+                  {image && (
+                    <div className="p-1 bg-white border border-gray-300 shadow-sm mb-1">
+                       <img src={image.previewUrl} className="max-h-24 max-w-full object-contain" />
+                    </div>
+                  )}
+                  <span className="text-[10px] text-gray-400 font-mono">ID: IMG_{1000 + index}</span>
+               </div>
+
+               {/* Data Content Cell */}
+               <div className="col-span-9 p-4 border-b border-gray-200">
+                  <div className="mb-3">
+                     <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block mb-0.5">Original Input (Cantonese)</span>
+                     <div className="text-lg font-serif text-gray-800 leading-relaxed bg-white border border-gray-200 p-2 inset-shadow">
+                        {result.cantonese}
+                     </div>
+                  </div>
+                  
+                  <div className="mb-2">
+                     <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider block mb-0.5">Translation Output (English)</span>
+                     <div className="text-base font-sans text-gray-900">
+                        {result.english}
+                     </div>
+                  </div>
+
+                  {result.notes && (
+                     <div className="mt-3 flex gap-2 items-start bg-yellow-50 border border-yellow-200 p-2 rounded">
+                        <div className="w-4 h-4 bg-yellow-400 text-white rounded-full flex items-center justify-center text-[10px] font-bold">i</div>
+                        <p className="text-xs text-gray-600 italic">
+                           {result.notes}
+                        </p>
+                     </div>
+                  )}
+               </div>
+
             </div>
-          </div>
+          );
+        })}
+      </div>
 
-          {/* English Column */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              English Translation
-            </h3>
-            <div className="p-4 bg-indigo-50/50 rounded-xl border border-indigo-100 text-lg md:text-xl text-indigo-900 font-medium leading-relaxed whitespace-pre-wrap">
-              {result.english}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Notes Section (if available) */}
-        {result.notes && (
-          <div className="px-6 pb-6">
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 flex gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="text-sm text-amber-800">
-                <span className="font-bold block mb-1">Context Notes</span>
-                {result.notes}
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="bg-gray-100 border border-gray-400 border-t-0 p-2 text-right text-xs text-gray-500 rounded-b-lg">
+         Total Records: {results.length}
       </div>
     </div>
   );
